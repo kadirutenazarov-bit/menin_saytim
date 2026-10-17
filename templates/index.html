@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Manga va Rejalar Paneli</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            overflow-x: hidden;
+        }
+        /* Jonli video fon */
+        .bg-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            z-index: -1;
+        }
+        .container { 
+            max-width: 850px; 
+            margin: 0 auto; 
+            background: rgba(255, 255, 255, 0.92); 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3); 
+            position: relative;
+            z-index: 1;
+        }
+        h1 { text-align: center; color: #2c3e50; margin-bottom: 30px; }
+        .section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 2px solid #eee; }
+        h2 { color: #34495e; font-size: 1.3rem; margin-bottom: 15px; }
+        h3 { color: #8e44ad; font-size: 1.1rem; margin-top: 15px; margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        input[type="text"], input[type="date"], input[type="time"], input[type="file"], select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; background: #fff; }
+        input[type="text"] { flex: 2; min-width: 200px; }
+        input[type="date"], input[type="time"], select { flex: 1; }
+        button { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        ul { list-style: none; padding: 0; }
+        li { background: #f8f9fa; padding: 12px 15px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #e9ecef; }
+        .todo-info { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .badge { background: #e1f5fe; color: #0288d1; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+        .time-badge { background: #fff3e0; color: #ef6c00; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; }
+        .delete-btn { color: #e74c3c; text-decoration: none; font-weight: bold; }
+        .file-link { color: #8e44ad; text-decoration: none; font-weight: bold; }
+        .file-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <!-- Jonli fon uchun video -->
+    <video autoplay muted loop class="bg-video">
+        <source src="/static/bg.mp4" type="video/mp4">
+    </video>
+
+    <div class="container">
+        <h1>📌 Shaxsiy Boshqaruv Paneli</h1>
+
+        <!-- REJALAR BO'LIMI -->
+        <div class="section">
+            <h2>📅 Rejalarim (Sana, Vaqt va Hafta kuni)</h2>
+            <form action="/add_todo" method="POST" class="input-group">
+                <input type="text" name="todo" placeholder="Reja matni..." required>
+                <input type="date" name="todo_date" required>
+                <input type="time" name="todo_time" required>
+                <select name="todo_day">
+                    <option value="Dushanba">Dushanba</option>
+                    <option value="Seshanba">Seshanba</option>
+                    <option value="Chorshanba">Chorshanba</option>
+                    <option value="Payshanba">Payshanba</option>
+                    <option value="Juma">Juma</option>
+                    <option value="Shanba">Shanba</option>
+                    <option value="Yakshanba">Yakshanba</option>
+</select>
+                <button type="submit">Qo'shish</button>
+            </form>
+            <ul>
+                {% for todo in todos %}
+                <li>
+                    <div class="todo-info">
+                        <span class="badge">🗓️ {{ todo.date }} ({{ todo.day }})</span>
+                        <span class="time-badge">⏰ {{ todo.time }}</span>
+                        <span>{{ todo.text }}</span>
+                    </div>
+                    <a href="/delete_todo/{{ loop.index0 }}" class="delete-btn">O'chirish</a>
+                </li>
+                {% else %}
+                <li style="color: #888;">Hozircha reja qo'shilmagan.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- MANGA YUKLASH BO'LIMI -->
+        <div class="section">
+            <h2>📖 Mangalarim (Janrlar bo'yicha)</h2>
+            <form action="/upload" method="POST" enctype="multipart/form-data" class="input-group">
+                <input type="file" name="pdf_file" accept=".pdf" required style="flex: 2;">
+                <select name="genre" style="flex: 1;">
+                    {% for g in genres %}
+                    <option value="{{ g }}">{{ g }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" style="background-color: #8e44ad;">Yuklash</button>
+            </form>
+
+            {% if manga_by_genre %}
+                {% for genre, files in manga_by_genre.items() %}
+                    <h3>🏷️ {{ genre }}</h3>
+                    <ul>
+                        {% for file in files %}
+                        <li>
+                            <a href="/uploads/{{ genre }}/{{ file }}" target="_blank" class="file-link">📚 {{ file }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endfor %}
+            {% else %}
+                <p style="color: #888;">Hali manga yuklanmadi.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
